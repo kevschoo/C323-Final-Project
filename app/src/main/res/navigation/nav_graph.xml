@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph.xml"
+    app:startDestination="@id/loginFragment">
+
+    <fragment
+        android:id="@+id/cameraFragment"
+        android:name="edu.iu.kevschoo.final_project.fragments.CameraFragment"
+        android:label="CameraFragment" />
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="edu.iu.kevschoo.final_project.fragments.HomeFragment"
+        android:label="fragment_home"
+        tools:layout="@layout/fragment_home" />
+    <fragment
+        android:id="@+id/imageViewFragment"
+        android:name="edu.iu.kevschoo.final_project.fragments.ImageViewFragment"
+        android:label="ImageViewFragment" />
+    <fragment
+        android:id="@+id/restaurantFragment"
+        android:name="edu.iu.kevschoo.final_project.fragments.RestaurantFragment"
+        android:label="RestaurantFragment" />
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="edu.iu.kevschoo.final_project.fragments.LoginFragment"
+        android:label="LoginFragment" />
+    <activity
+        android:id="@+id/mainActivity"
+        android:name="edu.iu.kevschoo.final_project.MainActivity"
+        android:label="MainActivity" />
+    <fragment
+        android:id="@+id/allFoodOrdersFragment"
+        android:name="edu.iu.kevschoo.final_project.fragments.AllFoodOrdersFragment"
+        android:label="AllFoodOrdersFragment" />
+    <fragment
+        android:id="@+id/checkoutFragment"
+        android:name="edu.iu.kevschoo.final_project.fragments.CheckoutFragment"
+        android:label="CheckoutFragment" />
+    <fragment
+        android:id="@+id/foodOrdersFragment"
+        android:name="edu.iu.kevschoo.final_project.fragments.FoodOrdersFragment"
+        android:label="FoodOrdersFragment" />
+    <fragment
+        android:id="@+id/mapFragment"
+        android:name="edu.iu.kevschoo.final_project.fragments.MapFragment"
+        android:label="MapFragment" />
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="edu.iu.kevschoo.final_project.fragments.ProfileFragment"
+        android:label="ProfileFragment" />
+    <fragment
+        android:id="@+id/createRestaurantFragment"
+        android:name="edu.iu.kevschoo.final_project.fragments.CreateRestaurantFragment"
+        android:label="CreateRestaurantFragment" />
+    <fragment
+        android:id="@+id/calendarGraphFragment"
+        android:name="edu.iu.kevschoo.final_project.fragments.CalendarGraphFragment"
+        android:label="fragment_calendar_graph"
+        tools:layout="@layout/fragment_calendar_graph" />
+
+</navigation>

@@ -1,0 +1,74 @@
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+
+    android:layout_margin="8dp"
+    card_view:cardElevation="4dp"
+    card_view:cardCornerRadius="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <!-- Food Name and Price -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:id="@+id/tvFoodName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Food Name"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/tvFoodPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$0.00"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- Quantity and Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/etQuantity"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:inputType="number"
+                android:gravity="center"
+                android:hint="Quantity" />
+
+            <ImageButton
+                android:id="@+id/btnAdd"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/plus"
+                app:tint="@color/black"
+                android:background="?android:attr/selectableItemBackground"
+                android:contentDescription="add" />
+
+            <ImageButton
+                android:id="@+id/btnRemove"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/minus"
+                app:tint="@color/black"
+                android:background="?android:attr/selectableItemBackground"
+                android:contentDescription="remove" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

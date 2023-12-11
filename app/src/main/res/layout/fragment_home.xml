@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar_all_food_orders"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:title=""
+        app:menu="@menu/menu_search"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Title for Recent Restaurants -->
+    <TextView
+        android:id="@+id/tvRecentRestaurants"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="Popular Restaurants"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"/>
+
+    <!-- Horizontal RecyclerView for Recent Restaurants -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvRecentRestaurants"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="8dp"
+        tools:listitem="@layout/item_restaurant"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        android:orientation="horizontal"/>
+
+    <!-- Title for All Restaurants -->
+    <TextView
+        android:id="@+id/tvAllRestaurants"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="All Restaurants"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"/>
+
+    <!-- Vertical RecyclerView for All Restaurants -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvAllRestaurants"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:layout_marginTop="8dp"
+        tools:listitem="@layout/item_restaurant"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
+
+</LinearLayout>
