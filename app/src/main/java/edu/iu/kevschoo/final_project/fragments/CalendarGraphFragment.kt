@@ -30,12 +30,25 @@ class CalendarGraphFragment : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: SharedViewModel by viewModels({requireActivity()})
 
+
+    /**
+     * Inflates the layout for this fragment
+     * @param inflater The LayoutInflater object that can be used to inflate any views in the fragment
+     * @param container If non-null, this is the parent view that the fragment's UI should be attached to
+     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state
+     * @return Return the View for the fragment's UI, or null
+     */
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View
     {
         _binding = FragmentCalendarGraphBinding.inflate(inflater, container, false)
         return binding.root
     }
 
+    /**
+     * Called immediately after onCreateView
+     * @param view The View returned by onCreateView(LayoutInflater, ViewGroup, Bundle)
+     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?)
     {
         super.onViewCreated(view, savedInstanceState)
@@ -69,6 +82,10 @@ class CalendarGraphFragment : Fragment() {
             override fun onMonthScroll(firstDayOfNewMonth: Date) {} })
     }
 
+    /**
+     * Displays the orders for a specific date
+     * @param selectedDate The date for which to display orders
+     */
     private fun displayOrdersForDate(selectedDate: Date)
     {
         val ordersOnDate = viewModel.allUserOrders.value?.filter { order -> isSameDay(order.orderDate, selectedDate) }.orEmpty()
@@ -82,6 +99,10 @@ class CalendarGraphFragment : Fragment() {
         binding.infoTextView.text = infoText
     }
 
+    /**
+     * Sums the costs of a list of food orders
+     * @return The total cost
+     */
     fun List<FoodOrder>.sumCosts(): Float
     {
         var sum = 0f
@@ -89,6 +110,10 @@ class CalendarGraphFragment : Fragment() {
         return sum
     }
 
+    /**
+     * Highlights the dates with orders in the calendar view
+     * @param dates The dates to highlight in the calendar
+     */
     private fun highlightOrderDatesInCalendar(dates: List<Date>)
     {
         dates.forEach { date ->
@@ -97,12 +122,21 @@ class CalendarGraphFragment : Fragment() {
         }
     }
 
+    /**
+     * Gets a label for a day
+     * @param dayIndex The index of the day
+     * @return The label for the day
+     */
     private fun getDayLabel(dayIndex: Int): String {
         val cal = Calendar.getInstance()
         cal.add(Calendar.DAY_OF_YEAR, -6 + dayIndex)
         return SimpleDateFormat("E", Locale.getDefault()).format(cal.time)
     }
 
+    /**
+     * Displays the orders for a specific day index
+     * @param dayIndex The index of the day for which to display orders
+     */
     private fun displayOrdersForDay(dayIndex: Int)
     {
         val cal = Calendar.getInstance()
@@ -129,6 +163,12 @@ class CalendarGraphFragment : Fragment() {
         binding.infoTextView.text = message
     }
 
+    /**
+     * Checks if two dates are on the same day
+     * @param date1 The first date
+     * @param date2 The second date
+     * @return True if the dates are on the same day, false otherwise
+     */
     private fun isSameDay(date1: Date, date2: Date): Boolean {
         val cal1 = Calendar.getInstance().apply { time = date1 }
         val cal2 = Calendar.getInstance().apply { time = date2 }
@@ -136,7 +176,10 @@ class CalendarGraphFragment : Fragment() {
                 cal1[Calendar.DAY_OF_YEAR] == cal2[Calendar.DAY_OF_YEAR]
     }
 
-
+    /**
+     * Sets up the bar chart with spending data
+     * @param spendingData The spending data to display in the bar chart
+     */
     private fun setupBarChart(spendingData: List<Float>) {
         val entries = ArrayList<BarEntry>()
         val labels = ArrayList<String>()
@@ -154,6 +197,9 @@ class CalendarGraphFragment : Fragment() {
         binding.barChart.invalidate()
     }
 
+    /**
+     * Sets up the listener for the bar chart
+     */
     private fun setupBarChartListener()
     {
         binding.barChart.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
@@ -168,6 +214,9 @@ class CalendarGraphFragment : Fragment() {
         })
     }
 
+    /**
+     * Called when the view hierarchy associated with the fragment is being destroyed
+     */
     override fun onDestroyView()
     {
         super.onDestroyView()

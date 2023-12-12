@@ -18,12 +18,25 @@ class CreateRestaurantFragment : Fragment() {
     private val viewModel: SharedViewModel by viewModels({requireActivity()})
     private val menuItems = mutableListOf<Food>()
 
+
+    /**
+     * Inflates the layout for this fragment
+     * @param inflater The LayoutInflater object that can be used to inflate any views in the fragment
+     * @param container If non-null, this is the parent view that the fragment's UI should be attached to
+     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state
+     * @return Return the View for the fragment's UI, or null
+     */
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View
     {
         _binding = FragmentCreateRestaurantBinding.inflate(inflater, container, false)
         return binding.root
     }
 
+    /**
+     * Called immediately after onCreateView
+     * @param view The View returned by onCreateView(LayoutInflater, ViewGroup, Bundle)
+     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?)
     {
         super.onViewCreated(view, savedInstanceState)
@@ -76,7 +89,9 @@ class CreateRestaurantFragment : Fragment() {
         updateFoodListDisplay()
     }
 
-
+    /**
+     * Called when the view hierarchy associated with the fragment is being destroyed
+     */
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

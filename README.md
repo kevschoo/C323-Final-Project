@@ -1,6 +1,12 @@
 # C323 Final Project
 
 This is a delivery and food ordering app. It has 8+ locations with images and 5+ foods per location. Orders can be tracked and reordered along with a calender to show daily cost amounts and weekly costs.
+NOTES: Bonus for calendar view was completed. If the user is on the same day of an order, an icon won't appear but previous days will have a dot to represent an order. Clicking a bar in the graph updates the info about the daily spending.
+Map and Calendar fragments can be accessed without orders.
+Recent orders screen gives the orders made on that day.
+All orders screen gives the orders made for the entire user period.
+In the Home screen, search lets the user search on names for a restaurant.
+In the all orders screen, search lets the user search for old orders based on name.
 
 ## Functionality 
 
@@ -28,10 +34,11 @@ The following **extensions** are implemented:
 ## Video Walkthrough
 
 Here's a walkthrough of implemented user stories:
-
+Here is an example of signing up, searching, ordering, editing orders, getting notifications, and more.
 <img src='walkthrough.gif' title='Video Walkthrough' width='50%' alt='Video Walkthrough' />
 
-
+Here is an example of logging in and seeing a calender with an old purchase as well as map view.
+<img src='walkthrough2.gif' title='Video Walkthrough' width='50%' alt='Video Walkthrough' />
 ## Notes
 
 This was a very complex project to design the data structures and fragments

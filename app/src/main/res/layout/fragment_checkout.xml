@@ -13,7 +13,7 @@
         android:id="@+id/tvRestaurantName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Restaurant Name"
+        android:text="Checkout Order"
         android:textSize="24sp"
         android:textStyle="bold"
         android:layout_marginBottom="16dp"/>
@@ -45,6 +45,20 @@
         android:inputType="text"
         android:layout_marginBottom="16dp"/>
 
+    <EditText
+        android:id="@+id/instructionEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Instructions"
+        android:inputType="text"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/btnModify"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Modify Order"
+        android:layout_marginTop="16dp"/>
     <!-- Button to Checkout Fragment -->
     <Button
         android:id="@+id/btnConfirmOrder"

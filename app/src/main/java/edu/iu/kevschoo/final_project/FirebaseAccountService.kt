@@ -14,8 +14,10 @@ import java.util.Date
 
 class FirebaseAccountService : AccountService
 {
+
     private val auth: FirebaseAuth = Firebase.auth
 
+    /** Flow of the current user, providing real-time updates on the authentication state */
     override val currentUser: Flow<User?>
         get() = callbackFlow {
             val listener = FirebaseAuth.AuthStateListener { auth ->
@@ -35,13 +37,17 @@ class FirebaseAccountService : AccountService
             awaitClose { auth.removeAuthStateListener(listener) }
         }
 
+    /** The current user's unique identifier*/
     override val currentUserId: String
         get() = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
+    /** Returns true if a user is currently signed in */
     override fun hasUser(): Boolean {return auth.currentUser != null }
 
+    /** Signs in a user with the specified email and password */
     override suspend fun signIn(email: String, password: String) { auth.signInWithEmailAndPassword(email, password).await() }
 
+    /** Creates a new user account with the specified name, email, and password */
     override suspend fun signUp(name: String, email: String, password: String)
     {
         val userCredential = auth.createUserWithEmailAndPassword(email, password).await()
@@ -60,5 +66,6 @@ class FirebaseAccountService : AccountService
         }
     }
 
+    /** Signs out the currently signed-in user */
     override suspend fun signOut() { auth.signOut() }
 }

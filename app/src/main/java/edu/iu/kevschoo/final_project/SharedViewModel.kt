@@ -1,6 +1,7 @@
 package edu.iu.kevschoo.final_project
 
 import android.app.Application
+import android.content.Intent
 import android.location.Geocoder
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
@@ -104,6 +105,7 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         fetchAllUserOrders()
     }
 
+    /** Fetches dates of orders made by the current user */
     fun getUserOrderDates(): LiveData<List<Date>>
     {
         val orderDatesLiveData = MutableLiveData<List<Date>>()
@@ -115,7 +117,7 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         return orderDatesLiveData
     }
 
-
+    /** Updates the weekly spending data of the current user */
     fun updateWeeklySpendingData()
     {
         viewModelScope.launch {
@@ -139,6 +141,7 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /** Filters user's orders by a given restaurant name */
     fun filterOrdersByRestaurantName(query: String?)
     {
         val filteredList = if (!query.isNullOrEmpty())
@@ -152,14 +155,17 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         _filteredOrders.postValue(filteredList.orEmpty())
     }
 
+    /** Selects a restaurant and initializes a new food order */
     fun selectRestaurant(restaurant: Restaurant)
     {
         _selectedRestaurant.value = restaurant
         _currentFoodOrder.value = FoodOrder(restaurantID = restaurant.id)
     }
 
+    /** Fetches all available foods from the storage service */
     private fun fetchAllFoods() { viewModelScope.launch { storageService.fetchAllFood().collect { foods -> _allFoods.postValue(foods) } } }
 
+    /** Fetches food items available at the current restaurant */
     fun fetchCurrentRestaurantFood(restaurantId: String)
     {
         viewModelScope.launch {
@@ -171,6 +177,7 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /** Updates the food order with a given food item and quantity*/
     fun updateFoodOrder(foodId: String, quantity: Int)
     {
         val currentOrder = _currentFoodOrder.value ?: FoodOrder(restaurantID = _selectedRestaurant.value?.id ?: "")
@@ -195,12 +202,16 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         _currentFoodOrder.value = currentOrder.copy(foodID = newFoodIds, foodAmount = newFoodAmounts)
     }
 
-
-    fun confirmOrder(destinationCoordinates: Pair<Double, Double>?, onSuccess: () -> Unit, onFailure: (String) -> Unit)
-    {
+    /** Confirms the current food order with additional details and processes it*/
+    fun confirmOrder(
+        destinationCoordinates: Pair<Double, Double>?,
+        addressName: String,
+        specialInstructions: String,
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
+    ) {
         val currentOrder = _currentFoodOrder.value
-        if (currentOrder?.foodID.isNullOrEmpty())
-        {
+        if (currentOrder?.foodID.isNullOrEmpty()) {
             onFailure("Order is empty.")
             return
         }
@@ -209,10 +220,12 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         val originCoordinates = getCoordinatesFromAddress(restaurantAddress)
 
         val totalCost = calculateTotalCost()
-        val distance = if (originCoordinates != null && destinationCoordinates != null) { calculateDistance(originCoordinates, destinationCoordinates) } else { 100.0 }
+        val distance = if (originCoordinates != null && destinationCoordinates != null)
+        { calculateDistance(originCoordinates, destinationCoordinates) }
+        else { 100.0 }
 
-        val deliveryTimeMinutes = (distance / 100) * (5..100).random()
-        val estimatedArrivalTime = Calendar.getInstance().apply { add(Calendar.MINUTE, deliveryTimeMinutes.toInt()) }.time
+        val deliveryTimeMinutes = maxOf(1.2, (distance / 100 * (5..100).random())).toInt()
+        val estimatedArrivalTime = Calendar.getInstance().apply { add(Calendar.MINUTE, deliveryTimeMinutes) }.time
 
         val updatedOrder = currentOrder?.copy(
             cost = totalCost,
@@ -220,13 +233,19 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
             addressOriginList = originCoordinates?.let { listOf("${it.first}", "${it.second}") } ?: listOf(),
             addressDestinationList = destinationCoordinates?.let { listOf("${it.first}", "${it.second}") } ?: listOf(),
             travelTime = estimatedArrivalTime,
-            isDelivered = false
+            isDelivered = false,
+            specialInstructions = specialInstructions,
+            addressName = addressName
         )
 
         _currentFoodOrder.value = updatedOrder
         submitOrderToFirebase(updatedOrder, onSuccess, onFailure)
     }
 
+    /** Updates the delivery status of a specific order as delivered */
+    fun updateOrderStatusAsDelivered(orderId: String) { viewModelScope.launch { storageService.updateOrderDeliveryStatus(orderId) } }
+
+    /** Calculates the total amount spent by the user on a specific date */
     fun getTotalSpentOnDate(date: Date): LiveData<Float>
     {
         val totalSpentLiveData = MutableLiveData<Float>()
@@ -243,6 +262,7 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         return totalSpentLiveData
     }
 
+    /** Calculates the sum of costs for a list of food orders */
     fun List<FoodOrder>.sumCosts(): Float
     {
         var sum = 0f
@@ -250,6 +270,7 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         return sum
     }
 
+    /** Calculates the start of a given day */
     private fun getStartOfDay(date: Date): Date
     {
         val cal = Calendar.getInstance()
@@ -261,6 +282,7 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         return cal.time
     }
 
+    /** Calculates the end of a given day */
     private fun getEndOfDay(date: Date): Date
     {
         val cal = Calendar.getInstance()
@@ -272,7 +294,14 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         return cal.time
     }
 
+    /** Sends a test notification*/
+    fun sendTestNotification() {
+        val intent = Intent(getApplication(), DeliveryCheckService::class.java)
+        intent.action = DeliveryCheckService.ACTION_SEND_TEST_NOTIFICATION
+        getApplication<Application>().startService(intent)
+    }
 
+    /** Calculates the distance between two geographic coordinates */
     private fun calculateDistance(origin: Pair<Double, Double>, destination: Pair<Double, Double>): Double
     {
         val earthRadius = 6371.0
@@ -291,6 +320,7 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         return Math.sqrt(Math.pow(distance, 2.0) + Math.pow(height, 2.0)) / 1.609
     }
 
+    /** Retrieves geographic coordinates from a given address string */
     private fun getCoordinatesFromAddress(address: String): Pair<Double, Double>?
     {
         if (address.isEmpty()) return null
@@ -313,23 +343,30 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-
-
-    private fun submitOrderToFirebase(order: FoodOrder?, onSuccess: () -> Unit, onFailure: (String) -> Unit)
-    {
+    /** Submits a food order to Firebase and handles the response */
+    private fun submitOrderToFirebase(order: FoodOrder?, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
         viewModelScope.launch {
-            try
-            {
+            try {
                 order?.let {
                     storageService.uploadUserFoodOrder(FirebaseAuth.getInstance().currentUser?.uid ?: "", it)
+                    startDeliveryCheckServiceAndSendNotification(it.id, it.travelTime)
                     onSuccess()
                 } ?: onFailure("Order is null.")
+            } catch (e: Exception) {
+                onFailure(e.message ?: "Error uploading order.")
             }
-            catch (e: Exception) { onFailure(e.message ?: "Error uploading order.") }
         }
     }
 
+    /** Starts a service to check the delivery status and sends a notification */
+    private fun startDeliveryCheckServiceAndSendNotification(orderId: String, estimatedDeliveryTime: Date) {
+        val intent = Intent(getApplication(), DeliveryCheckService::class.java)
+        intent.putExtra("ORDER_ID", orderId)
+        intent.putExtra("ESTIMATED_DELIVERY_TIME", estimatedDeliveryTime.time) // Passing time in milliseconds
+        getApplication<Application>().startService(intent)
+    }
 
+    /** Calculates the total cost of the current food order */
     fun calculateTotalCost(): Float
     {
         val currentOrder = _currentFoodOrder.value ?: return 0f
@@ -346,7 +383,7 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         return totalCost
     }
 
-
+    /** Removes a food item from the current order */
     fun removeFoodFromOrder(foodId: String)
     {
         val currentOrder = _currentFoodOrder.value ?: return
@@ -363,14 +400,13 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         _currentFoodOrder.value = currentOrder.copy(foodID = newFoodIds, foodAmount = newFoodAmounts)
     }
 
-
-
+    /** Fetches all available restaurants from the storage service */
     private fun fetchAllRestaurants()
     {
         viewModelScope.launch { storageService.fetchRestaurants().collect { restaurants -> _allRestaurants.postValue(restaurants) } }
     }
 
-
+    /** Reorders a previous food order and navigates to the corresponding UI */
     fun reorderOrder(foodOrder: FoodOrder, onNavigate: () -> Unit)
     {
         _currentFoodOrder.postValue(foodOrder)
@@ -379,14 +415,17 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         onNavigate()
     }
 
+    /** Tracks a specific food order and navigates to the tracking UI */
     fun trackOrder(foodOrder: FoodOrder, onNavigate: () -> Unit)
     {
         _currentFoodOrder.postValue(foodOrder)
         onNavigate()
     }
 
+    /** Refetches all user orders */
     fun reFetchOrders( ){ fetchAllUserOrders() }
 
+    /** Fetches all orders made by the current user */
     private fun fetchAllUserOrders()
     {
         viewModelScope.launch {
@@ -399,12 +438,14 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /** Filters orders for displaying on a calendar interface*/
     private fun filterOrdersForCalendar()
     {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
         _filteredOrders.postValue(_allUserOrders.value.orEmpty().filter { it.userID == userId })
     }
 
+    /** Fetches recent orders made by the current user */
     private fun fetchUserRecentOrders()
     {
         viewModelScope.launch {
@@ -420,6 +461,7 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /** Updates the list of recent restaurants based on user's order history */
     private fun updateRecentRestaurants()
     {
         val recentOrderIds = _userRecentOrders.value?.map { it.restaurantID }?.distinct().orEmpty()
@@ -430,6 +472,7 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         _recentRestaurants.postValue(if (matchingRestaurants.isNotEmpty()) matchingRestaurants else allRestaurants.take(5))
     }
 
+    /** Filters restaurants based on a given query */
     fun filterRestaurants(query: String?)
     {
         val filteredList = _allRestaurants.value?.filter { it.name.contains(query ?: "", ignoreCase = true) } ?: emptyList()
@@ -440,11 +483,12 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
     //
     // Login Stuff
     //
-
+    /** Signs in a user with the given email and password */
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?>
         get() = _errorMessage
 
+    /** Sets the selected image URI for profile picture */
     fun signIn(email: String, password: String)
     {
         viewModelScope.launch {
@@ -465,8 +509,10 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /** Signs up a new user with the given name, email, and password*/
     fun selectImageUri(uri: Uri) { _selectedImageUri.value = uri }
 
+    /** Uploads a user's profile picture to Firebase and updates the URI */
     fun signUp(name: String, email: String, password: String)
     {
         viewModelScope.launch {
@@ -491,6 +537,7 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /** Handles exceptions encountered during Firebase authentication */
     fun uploadUserProfilePicture(userId: String, imageUri: Uri, onComplete: (Uri?) -> Unit)
     {
         viewModelScope.launch {
@@ -503,6 +550,7 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /** Signs out the current user and resets user-specific data*/
     private fun handleFirebaseAuthException(e: FirebaseAuthException): String
     {
         return when (e.errorCode)
@@ -514,11 +562,23 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun clearImages()
+    {
+        viewModelScope.launch {
+            // Reset user-specific LiveData
+            _userProfilePictureUrl.value = ""
+            _selectedImageUri.value = null
+
+        }
+    }
+
+    /** Clears user data and updates LiveData accordingly*/
     fun signOut()
     {
         viewModelScope.launch {
             // Reset user-specific LiveData
-            _selectedImageUri.value = null
+            //_userProfilePictureUrl.value = ""
+            //_selectedImageUri.value = null
             _selectedRestaurant.value = null
             _currentFoodOrder.value = null
             _allUserOrders.value = emptyList()
@@ -529,9 +589,6 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
             _selectedDateTotalCost.value = 0f
             _weeklySpendingData.value = List(7) { 0f }
 
-            _userProfilePictureUrl.value = ""
-
-            // Change authentication state and sign out from Firebase
             if (_authenticationState.value != AuthenticationState.UNAUTHENTICATED) {
                 _authenticationState.value = AuthenticationState.UNAUTHENTICATED
                 accountService.signOut()
@@ -539,6 +596,7 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    /** Fetches user data from Firebase and updates LiveData accordingly */
     fun fetchUserData()
     {
         viewModelScope.launch {
@@ -554,18 +612,16 @@ class SharedViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun createFood(food: Food, onComplete: (String?) -> Unit) {
-        viewModelScope.launch { storageService.createFood(food) { foodId -> onComplete(foodId) } }
-    }
 
+    /** Creates a new food item in the storage service */
+    fun createFood(food: Food, onComplete: (String?) -> Unit)
+    { viewModelScope.launch { storageService.createFood(food) { foodId -> onComplete(foodId) } } }
+
+    /** Creates a new restaurant in the storage service */
     fun createRestaurant(restaurant: Restaurant)
-    {
-        viewModelScope.launch { storageService.createRestaurant(restaurant) }
-    }
+    { viewModelScope.launch { storageService.createRestaurant(restaurant) } }
 
-
-
-
+    /** Updates the user's profile picture and uploads it to Firebase */
     fun updateProfilePicture(imageUri: Uri)
     {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return

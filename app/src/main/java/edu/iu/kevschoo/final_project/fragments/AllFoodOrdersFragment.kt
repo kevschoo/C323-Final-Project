@@ -14,6 +14,7 @@ import edu.iu.kevschoo.final_project.R
 import edu.iu.kevschoo.final_project.SharedViewModel
 import edu.iu.kevschoo.final_project.databinding.FragmentAllFoodOrdersBinding
 import edu.iu.kevschoo.final_project.model.FoodOrder
+import java.util.Date
 
 class AllFoodOrdersFragment : Fragment() {
 
@@ -22,20 +23,37 @@ class AllFoodOrdersFragment : Fragment() {
     private val viewModel: SharedViewModel by viewModels({requireActivity()})
     private var isSearchActive = false
 
+
+    /**
+     * Inflates the layout for this fragment
+     * @param inflater The LayoutInflater object that can be used to inflate any views in the fragment
+     * @param container If non-null, this is the parent view that the fragment's UI should be attached to
+     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state
+     * @return Return the View for the fragment's UI, or null
+     */
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View
     {
         _binding = FragmentAllFoodOrdersBinding.inflate(inflater, container, false)
         return binding.root
     }
 
+    /**
+     * Called immediately after onCreateView
+     * @param view The View returned by onCreateView(LayoutInflater, ViewGroup, Bundle)
+     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?)
     {
         super.onViewCreated(view, savedInstanceState)
+        viewModel.reFetchOrders()
         observeAllOrders()
         binding.rvAllFoodOrders.layoutManager = LinearLayoutManager(context)
         setupSearchView()
     }
 
+    /**
+     * Sets up the SearchView for filtering food orders
+     */
     private fun setupSearchView()
     {
         val searchItem = binding.toolbarAllFoodOrders.menu.findItem(R.id.action_search)
@@ -55,10 +73,20 @@ class AllFoodOrdersFragment : Fragment() {
         })
     }
 
+    /**
+     * Observes all user orders and updates the RecyclerView
+     */
     private fun observeAllOrders() { viewModel.allUserOrders.observe(viewLifecycleOwner) { orders -> updateRecyclerView(orders) } }
 
+    /**
+     * Observes filtered user orders and updates the RecyclerView
+     */
     private fun observeFilteredOrders() { viewModel.filteredOrders.observe(viewLifecycleOwner) { filteredOrders -> updateRecyclerView(filteredOrders) } }
 
+    /**
+     * Handles the search query for filtering orders
+     * @param query The search query string
+     */
     private fun handleSearchQuery(query: String?)
     {
         if (query.isNullOrEmpty() && isSearchActive)
@@ -77,11 +105,19 @@ class AllFoodOrdersFragment : Fragment() {
         }
     }
 
+    /**
+     * Updates the RecyclerView with the given list of food orders
+     * @param orders The list of FoodOrder objects to be displayed
+     */
     private fun updateRecyclerView(orders: List<FoodOrder>)
     {
         Log.d("AllFoodOrdersFragment", "Updating RecyclerView with ${orders.size} orders")
         val sortedOrders = orders.sortedByDescending { it.orderDate }
-
+        orders.forEach { order ->
+            if (!order.isDelivered && order.travelTime <= Date()) {
+                viewModel.updateOrderStatusAsDelivered(order.id)
+            }
+        }
         val adapter = FoodOrderAdapter(
             orders = sortedOrders,
             allFoods = viewModel.allFoods.value.orEmpty(),
@@ -95,10 +131,19 @@ class AllFoodOrdersFragment : Fragment() {
         binding.rvAllFoodOrders.adapter = adapter
     }
 
+    /**
+     * Navigates to the CheckoutFragment
+     */
     private fun navigateToCheckoutFragment() { findNavController().navigate(R.id.checkoutFragment) }
 
+    /**
+     * Navigates to the MapFragment
+     */
     private fun navigateToMapFragment() { findNavController().navigate(R.id.mapFragment) }
 
+    /**
+     * Called when the view hierarchy associated with the fragment is being destroyed
+     */
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

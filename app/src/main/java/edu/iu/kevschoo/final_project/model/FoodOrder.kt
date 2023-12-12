@@ -17,7 +17,21 @@ data class FoodOrder(
     val foodAmount: List<Int> = listOf(),
     val addressOriginList: List<String> = listOf(),
     val addressDestinationList: List<String> = listOf(),
-
-    )
+    val specialInstructions: String = "",
+    val addressName: String = "",
+    ){
+    fun getRemainingDeliveryTime(currentTime: Date = Date()): String {
+        if (isDelivered) {
+            return "Delivered"
+        }
+        val remainingTime = travelTime.time - currentTime.time
+        if (remainingTime <= 0) {
+            return "Arriving"
+        }
+        val hours = remainingTime / (1000 * 60 * 60)
+        val minutes = (remainingTime % (1000 * 60 * 60)) / (1000 * 60)
+        return String.format("%d hours, %d min", hours, minutes)
+    }
+}
 
 

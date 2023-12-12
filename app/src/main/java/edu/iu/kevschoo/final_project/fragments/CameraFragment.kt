@@ -40,12 +40,25 @@ class CameraFragment : Fragment()
     private var isCameraInitialized = false
     private val cameraPermissionRequestCode = 1001
 
+
+    /**
+     * Inflates the layout for this fragment
+     * @param inflater The LayoutInflater object that can be used to inflate any views in the fragment
+     * @param container If non-null, this is the parent view that the fragment's UI should be attached to
+     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state
+     * @return Return the View for the fragment's UI, or null
+     */
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View
     {
         _binding = FragmentCameraBinding.inflate(inflater, container, false)
         return binding.root
     }
 
+    /**
+     * Called immediately after onCreateView
+     * @param view The View returned by onCreateView(LayoutInflater, ViewGroup, Bundle)
+     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?)
     {
         super.onViewCreated(view, savedInstanceState)
@@ -74,10 +87,11 @@ class CameraFragment : Fragment()
         }
         startCamera()
 
-
-
     }
 
+    /**
+     * Initializes and starts the camera with the required use cases
+     */
     private fun startCamera()
     {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
@@ -127,6 +141,11 @@ class CameraFragment : Fragment()
         }, ContextCompat.getMainExecutor(requireContext()))
     }
 
+    /**
+     * Creates a temporary image file in the app's private storage directory
+     * @param context The context used for accessing the file system
+     * @return A File object representing the created image file
+     */
     private fun createImageFile(context: Context): File
     {
         val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
@@ -138,6 +157,12 @@ class CameraFragment : Fragment()
         )
     }
 
+    /**
+     * Callback for the result from requesting permissions. Handles the case of the camera permission request
+     * @param requestCode The request code passed in requestPermissions(android.app.Activity, String[], int)
+     * @param permissions The requested permissions. Never null
+     * @param grantResults The grant results for the corresponding permissions which is either PackageManager.PERMISSION_GRANTED or PackageManager.PERMISSION_DENIED. Never null
+     */
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray)
     {
         when (requestCode)
@@ -151,6 +176,9 @@ class CameraFragment : Fragment()
         }
     }
 
+    /**
+     * Called when the view hierarchy associated with the fragment is being destroyed
+     */
     override fun onDestroyView()
     {
         super.onDestroyView()

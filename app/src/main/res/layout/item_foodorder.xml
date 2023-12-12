@@ -39,12 +39,42 @@
             android:text="Total Cost: $0.00"
             android:textSize="16sp"
             android:paddingBottom="8dp"/>
-
+        <TextView
+            android:id="@+id/tvDestination"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Destination: "
+            android:textSize="16sp"
+            android:paddingBottom="8dp"/>
         <TextView
             android:id="@+id/tvOrderDateTime"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Date, Time: YYYY-MM-DD HH:MM"
+            android:textSize="16sp"
+            android:paddingBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tvTransitTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Transit Time:"
+            android:textSize="16sp"
+            android:paddingBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Delivered:"
+            android:textSize="16sp"
+            android:paddingBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tvInstructions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Instructions:"
             android:textSize="16sp"
             android:paddingBottom="8dp"/>
 

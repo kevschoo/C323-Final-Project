@@ -35,6 +35,11 @@ class CheckoutFragment : Fragment() {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 100
     }
 
+    /**
+     * Called immediately after onCreateView
+     * @param view The View returned by onCreateView(LayoutInflater, ViewGroup, Bundle)
+     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?)
     {
         super.onViewCreated(view, savedInstanceState)
@@ -52,19 +57,29 @@ class CheckoutFragment : Fragment() {
 
         binding.btnConfirmOrder.setOnClickListener {
             val address = binding.addressEditText.text.toString()
+            val instructions = binding.instructionEditText.text.toString()
+            val addressName = if (address.isNotEmpty()) address else "User Location"
+
             if (address.isNotEmpty())
             {
                 val coordinates = getCoordinatesFromAddress(address)
                 if (coordinates != null)
-                { processOrderWithCoordinates(coordinates) }
+                { processOrderWithCoordinates(coordinates, addressName, instructions) }
                 else
                 { showErrorDialog("Invalid address or unable to geocode.") }
             }
-            else { checkAndRequestLocationPermissions() }
-
+            else
+            { checkAndRequestLocationPermissions() }
+        }
+        binding.btnModify.setOnClickListener {
+            findNavController().navigate(R.id.restaurantFragment)
         }
     }
 
+    /**
+     * Displays an error dialog with the specified message
+     * @param errorMsg The error message to display in the dialog
+     */
     private fun showErrorDialog(errorMsg: String)
     {
         AlertDialog.Builder(requireContext())
@@ -75,6 +90,10 @@ class CheckoutFragment : Fragment() {
             .show()
     }
 
+    /**
+     * Updates the RecyclerView with the items in the current food order
+     * @param foodOrder The current food order
+     */
     private fun updateOrderItems(foodOrder: FoodOrder)
     {
         val foodItems = viewModel.allFoods.value.orEmpty()
@@ -87,12 +106,18 @@ class CheckoutFragment : Fragment() {
         updateTotalCost()
     }
 
+    /**
+     * Updates the total cost of the current order displayed in the UI
+     */
     private fun updateTotalCost()
     {
         val totalCost = viewModel.calculateTotalCost()
         binding.tvTotal.text = "Total: $${totalCost}"
     }
 
+    /**
+     * Sets up the RecyclerView used to display the items in the current order
+     */
     private fun setupRecyclerView()
     {
         checkoutAdapter = CheckoutAdapter(
@@ -111,6 +136,9 @@ class CheckoutFragment : Fragment() {
         attachItemTouchHelper()
     }
 
+    /**
+     * Attaches an ItemTouchHelper to the RecyclerView for swipe-to-delete functionality
+     */
     private fun attachItemTouchHelper()
     {
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
@@ -127,14 +155,22 @@ class CheckoutFragment : Fragment() {
         itemTouchHelper.attachToRecyclerView(binding.rvFoodItems)
     }
 
-    private fun processOrderWithCoordinates(coordinates: Pair<Double, Double>)
-    {
-        viewModel.confirmOrder(coordinates,
+    /**
+     * Processes an order with the specified coordinates, address name, and instructions
+     * @param coordinates The coordinates for the order's destination
+     * @param addressName The name of the order's destination address
+     * @param instructions Special instructions for the order
+     */
+    private fun processOrderWithCoordinates(coordinates: Pair<Double, Double>, addressName: String, instructions: String) {
+        viewModel.confirmOrder(coordinates, addressName, instructions,
             onSuccess = { findNavController().navigate(R.id.homeFragment) },
             onFailure = { errorMsg -> showErrorDialog(errorMsg) }
         )
     }
 
+    /**
+     * Checks and requests location permissions if necessary
+     */
     private fun checkAndRequestLocationPermissions()
     {
         if (ContextCompat.checkSelfPermission(
@@ -149,6 +185,11 @@ class CheckoutFragment : Fragment() {
         else { getUserLocation() }
     }
 
+    /**
+     * Converts a given address string to geographical coordinates
+     * @param address The address string to geocode
+     * @return A Pair of Double representing latitude and longitude, or null if geocoding failed
+     */
     private fun getCoordinatesFromAddress(address: String): Pair<Double, Double>?
     {
         context?.let { safeContext ->
@@ -166,6 +207,13 @@ class CheckoutFragment : Fragment() {
         return null
     }
 
+
+    /**
+     * Handles the result of permission requests
+     * @param requestCode The request code passed in requestPermissions()
+     * @param permissions The requested permissions
+     * @param grantResults The grant results for the corresponding permissions
+     */
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -183,6 +231,9 @@ class CheckoutFragment : Fragment() {
     }
 
 
+    /**
+     * Retrieves the user's last known location and processes the order using it
+     */
     private fun getUserLocation()
     {
         context?.let { safeContext ->
@@ -199,20 +250,30 @@ class CheckoutFragment : Fragment() {
 
             try
             {
-                val location = if (isGpsEnabled) { locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) }
-                else { locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER) }
+                val location = if (isGpsEnabled)
+                { locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) }
+                else
+                { locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER) }
 
                 location?.let {
                     val userCoordinates = Pair(it.latitude, it.longitude)
-                    processOrderWithCoordinates(userCoordinates) } ?: showErrorDialog("Unable to determine your location.")
+                    val addressName = "User Location" // Default address name when using current location
+                    val instructions = binding.instructionEditText.text.toString()
+
+                    processOrderWithCoordinates(userCoordinates, addressName, instructions)
+                } ?: showErrorDialog("Unable to determine your location.")
             }
-            catch (e: SecurityException) {
+            catch (e: SecurityException)
+            {
                 Log.e("CheckoutFragment", "Security Exception", e)
                 showErrorDialog("Unable to access your location.")
             }
         }
     }
 
+    /**
+     * Requests location permissions
+     */
     private fun requestLocationPermissions()
     {
         requestPermissions(
@@ -224,12 +285,21 @@ class CheckoutFragment : Fragment() {
         )
     }
 
+    /**
+     * Inflates the layout for this fragment
+     * @param inflater The LayoutInflater object that can be used to inflate any views in the fragment
+     * @param container If non-null, this is the parent view that the fragment's UI should be attached to
+     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state
+     * @return Return the View for the fragment's UI, or null
+     */
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View
     {
         _binding = FragmentCheckoutBinding.inflate(inflater, container, false)
         return binding.root
     }
-
+    /**
+     * Called when the view hierarchy associated with the fragment is being destroyed
+     */
     override fun onDestroyView()
     {
         super.onDestroyView()

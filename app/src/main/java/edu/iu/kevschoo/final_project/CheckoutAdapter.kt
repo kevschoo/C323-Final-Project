@@ -12,8 +12,17 @@ class CheckoutAdapter(
 ) : RecyclerView.Adapter<CheckoutAdapter.CheckoutViewHolder>() {
     private var orderItems: List<Pair<Food, Int>> = listOf()
 
+    /**
+     * ViewHolder for checkout items, holding the view binding
+     */
     class CheckoutViewHolder(val binding: ItemFoodBinding) : RecyclerView.ViewHolder(binding.root)
 
+    /**
+     * Creates new ViewHolder instances for RecyclerView items
+     * @param parent The ViewGroup into which the new View will be added after it is bound to an adapter position
+     * @param viewType The view type of the new View
+     * @return A new ViewHolder that holds the View for each item
+     */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CheckoutViewHolder
     {
         val layoutInflater = LayoutInflater.from(parent.context)
@@ -21,6 +30,11 @@ class CheckoutAdapter(
         return CheckoutViewHolder(binding)
     }
 
+    /**
+     * Binds the data at the specified position into the ViewHolder
+     * @param holder The ViewHolder that should be updated to represent the contents of the item at the given position
+     * @param position The position of the item within the adapter's data set
+     */
     override fun onBindViewHolder(holder: CheckoutViewHolder, position: Int)
     {
         val (food, quantity) = orderItems[position]
@@ -46,13 +60,26 @@ class CheckoutAdapter(
         }
     }
 
+    /**
+     * Returns the total number of items in the data set held by the adapter
+     * @return The total number of items in this adapter
+     */
     override fun getItemCount(): Int = orderItems.size
 
+    /**
+     * Updates the list of order items and notifies the adapter to refresh the view
+     * @param newOrderItems The new list of order items to display
+     */
     fun setOrderItems(newOrderItems: List<Pair<Food, Int>>)
     {
         orderItems = newOrderItems
         notifyDataSetChanged()
     }
 
+    /**
+     * Retrieves the ID of the food item at the specified position
+     * @param position The position of the item in the list
+     * @return The ID of the food item
+     */
     fun getFoodId(position: Int): String { return orderItems[position].first.id }
 }

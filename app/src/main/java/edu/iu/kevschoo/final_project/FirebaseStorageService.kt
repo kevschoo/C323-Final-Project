@@ -24,7 +24,11 @@ class FirebaseStorageService : StorageService
     private val firestore: FirebaseFirestore = Firebase.firestore
     private val userId: String? get() = FirebaseAuth.getInstance().currentUser?.uid
 
-
+    /**
+     * Retrieves a flow of food orders made by a specific user from Firestore
+     * @param userId The ID of the user whose orders are to be fetched
+     * @return A flow of a list of FoodOrder objects
+     */
     override fun fetchUserOrders(userId: String): Flow<List<FoodOrder>> = callbackFlow {
         val userOrdersRef = firestore.collection("orders").whereEqualTo("userID", userId)
         val subscription = userOrdersRef.addSnapshotListener { snapshot, _ ->
@@ -36,15 +40,38 @@ class FirebaseStorageService : StorageService
         awaitClose { subscription.remove() }
     }
 
+    /**
+     * Fetches a single food order by its ID from Firestore
+     * @param orderId The ID of the order to fetch
+     * @return The FoodOrder object if found, otherwise null
+     */
     override fun fetchOrderById(orderId: String): FoodOrder?
     {
+        if (orderId.isBlank())
+        {
+            Log.e("FirebaseStorageService", "Order ID is blank")
+            return null
+        }
+
         var foodOrder: FoodOrder? = null
-        firestore.collection("orders").document(orderId).get()
-            .addOnSuccessListener { documentSnapshot -> foodOrder = documentSnapshot.toObject(FoodOrder::class.java) }
-            .addOnFailureListener { e -> Log.e("FirebaseStorageService", "Error fetching order", e) }
+        val task = firestore.collection("orders").document(orderId).get()
+
+        try
+        {
+            val documentSnapshot = task.result
+            if (documentSnapshot != null && documentSnapshot.exists())
+            { foodOrder = documentSnapshot.toObject(FoodOrder::class.java) }
+        }
+        catch (e: Exception)
+        { Log.e("FirebaseStorageService", "Error fetching order", e) }
         return foodOrder
     }
 
+    /**
+     * Uploads a food order to Firestore under a specific user's ID
+     * @param userId The ID of the user to associate the order with
+     * @param foodOrder The FoodOrder object to upload
+     */
     override fun uploadUserFoodOrder(userId: String, foodOrder: FoodOrder)
     {
         val newOrderRef = firestore.collection("orders").document()
@@ -61,6 +88,12 @@ class FirebaseStorageService : StorageService
             .addOnFailureListener { e -> Log.e("FirebaseStorageService", "Error uploading order", e) }
     }
 
+    /**
+     * Uploads a user's profile picture to Firebase Storage and updates the user's profile in Firestore
+     * @param userId The ID of the user
+     * @param imageUri The URI of the image to upload
+     * @param onComplete A callback function to execute upon completion, passing the Uri of the uploaded image
+     */
     override fun uploadUserProfilePicture(userId: String, imageUri: Uri, onComplete: (Uri?) -> Unit)
     {
         val fileRef = storageReference.child("DeliveryAppProfilePictures/$userId/profile_picture")
@@ -74,11 +107,16 @@ class FirebaseStorageService : StorageService
                     .addOnFailureListener { onComplete(null) }
             }
         }.addOnFailureListener { exception ->
-                Log.e("FirebaseStorageService", "Image upload failed", exception)
-                onComplete(null)
-            }
+            Log.e("FirebaseStorageService", "Image upload failed", exception)
+            onComplete(null)
+        }
     }
 
+    /**
+     * Retrieves a flow of the URL of a user's profile picture from Firestore
+     * @param userId The ID of the user
+     * @return A flow of the URL as a String
+     */
     override fun fetchUserProfilePicture(userId: String): Flow<String> = callbackFlow {
         firestore.collection("users").document(userId)
             .addSnapshotListener { snapshot, _ ->
@@ -91,6 +129,10 @@ class FirebaseStorageService : StorageService
         awaitClose()
     }
 
+    /**
+     * Retrieves a flow of available restaurants from Firestore
+     * @return A flow of a list of Restaurant objects
+     */
     override fun fetchRestaurants(): Flow<List<Restaurant>> = callbackFlow {
         val restaurantsRef = firestore.collection("restaurants")
         val subscription = restaurantsRef.addSnapshotListener { snapshot, _ ->
@@ -102,6 +144,11 @@ class FirebaseStorageService : StorageService
         awaitClose { subscription.remove() }
     }
 
+    /**
+     * Retrieves a flow of foods offered by a specific restaurant from Firestore
+     * @param restaurantID The ID of the restaurant
+     * @return A flow of a list of Food objects
+     */
     override fun fetchRestaurantFoods(restaurantID: String): Flow<List<Food>> = callbackFlow {
         val foodsRef = firestore.collection("restaurants").document(restaurantID).collection("menu")
         val subscription = foodsRef.addSnapshotListener { snapshot, _ ->
@@ -114,6 +161,13 @@ class FirebaseStorageService : StorageService
         awaitClose { subscription.remove() }
     }
 
+    /**
+     * Retrieves a flow of food orders made by a user within a specified date range from Firestore
+     * @param userId The ID of the user
+     * @param startDate The start date of the range
+     * @param endDate The end date of the range
+     * @return A flow of a list of FoodOrder objects
+     */
     override fun fetchUserOrdersForDate(userId: String, startDate: Date, endDate: Date): Flow<List<FoodOrder>> = callbackFlow {
         val startOfDay = Calendar.getInstance().apply {
             time = startDate
@@ -154,6 +208,10 @@ class FirebaseStorageService : StorageService
         awaitClose { subscription.remove() }
     }
 
+    /**
+     * Retrieves a flow of all available foods from Firestore
+     * @return A flow of a list of Food objects
+     */
     override fun fetchAllFood(): Flow<List<Food>> = callbackFlow {
         val foodsRef = firestore.collection("foods")
         val subscription = foodsRef.addSnapshotListener { snapshot, _ ->
@@ -166,6 +224,11 @@ class FirebaseStorageService : StorageService
         awaitClose { subscription.remove() }
     }
 
+    /**
+     * Retrieves a flow of information about a specific food item from Firestore
+     * @param foodID The ID of the food item
+     * @return A flow of a Food object or null if not found
+     */
     override fun fetchFood(foodID: String): Flow<Food?> = callbackFlow {
         val foodRef = firestore.collection("foods").document(foodID)
         val subscription = foodRef.addSnapshotListener { snapshot, _ ->
@@ -178,6 +241,11 @@ class FirebaseStorageService : StorageService
         awaitClose { subscription.remove() }
     }
 
+    /**
+     * Creates a new food item in Firestore and executes a callback upon completion
+     * @param food The Food object to create
+     * @param onComplete A callback function to execute upon completion, passing the ID of the created food item
+     */
     override fun createFood(food: Food, onComplete: (String?) -> Unit)
     {
         val newFoodRef = firestore.collection("foods").document()
@@ -191,6 +259,10 @@ class FirebaseStorageService : StorageService
             }
     }
 
+    /**
+     * Adds a new restaurant to Firestore
+     * @param restaurant The Restaurant object to create
+     */
     override fun createRestaurant(restaurant: Restaurant)
     {
         val newRestaurantRef = firestore.collection("restaurants").document()
@@ -201,6 +273,11 @@ class FirebaseStorageService : StorageService
             .addOnFailureListener { e -> Log.e("FirebaseStorageService", "Error creating restaurant", e) }
     }
 
+    /**
+     * Retrieves a flow of information about a specific restaurant by its ID from Firestore
+     * @param restaurantId The ID of the restaurant
+     * @return A flow of a Restaurant object or null if not found
+     */
     override fun fetchRestaurantById(restaurantId: String): Flow<Restaurant?> = callbackFlow {
         val restaurantRef = firestore.collection("restaurants").document(restaurantId)
         restaurantRef.get().addOnSuccessListener { documentSnapshot ->
@@ -208,5 +285,16 @@ class FirebaseStorageService : StorageService
             trySend(restaurant).isSuccess
         }
         awaitClose()
+    }
+
+    /**
+     * Updates the delivery status of a specific order in Firestore
+     * @param orderId The ID of the order
+     */
+    override fun updateOrderDeliveryStatus(orderId: String) {
+        val orderRef = firestore.collection("orders").document(orderId)
+        orderRef.update("delivered", true)
+            .addOnSuccessListener { Log.d("FirebaseStorageService", "Order status updated to delivered for order ID: $orderId") }
+            .addOnFailureListener { e -> Log.e("FirebaseStorageService", "Error updating order status", e) }
     }
 }

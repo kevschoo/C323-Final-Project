@@ -25,6 +25,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private val sharedViewModel: SharedViewModel by viewModels()
 
+    /**
+     * Initializes the activity, sets up the navigation drawer and toolbar, and initializes view model observation
+     * @param savedInstanceState State of the application in a previous configuration
+     */
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super.onCreate(savedInstanceState)
@@ -41,6 +45,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val drawerLayout: DrawerLayout = binding.drawerLayout
         toggle = ActionBarDrawerToggle(this, drawerLayout, binding.toolbar, R.string.open, R.string.close)
         drawerLayout.addDrawerListener(toggle)
+
         toggle.syncState()
 
         binding.navView.setNavigationItemSelectedListener(this)
@@ -76,6 +81,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
+    /**
+     * Handles navigation item selection and directs the user to the appropriate fragment
+     * @param item The MenuItem that was selected
+     * @return Boolean indicating whether the item selection was handled
+     */
     override fun onNavigationItemSelected(item: MenuItem): Boolean
     {
         val navController = findNavController(R.id.nav_host_fragment)
@@ -92,6 +102,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 R.id.nav_create -> navController.navigate(R.id.createRestaurantFragment)
                 R.id.nav_logout -> {
                     sharedViewModel.signOut()
+                    sharedViewModel.clearImages()
                     navController.navigate(R.id.loginFragment)
                 }
             }
@@ -101,6 +112,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return true
     }
 
+    /**
+     * Custom behavior for the back button press. Closes the navigation drawer if it is open; otherwise, performs the default back button action
+     */
     override fun onBackPressed()
     {
         if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) { binding.drawerLayout.closeDrawer(GravityCompat.START) }

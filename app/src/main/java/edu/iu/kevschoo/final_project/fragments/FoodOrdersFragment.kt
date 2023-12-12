@@ -22,24 +22,44 @@ class FoodOrdersFragment : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: SharedViewModel by viewModels({requireActivity()})
 
+
+    /**
+     * Inflates the layout for this fragment
+     * @param inflater The LayoutInflater object that can be used to inflate any views in the fragment
+     * @param container If non-null, this is the parent view that the fragment's UI should be attached to
+     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state
+     * @return Return the View for the fragment's UI, or null
+     */
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View
     {
         _binding = FragmentFoodOrdersBinding.inflate(inflater, container, false)
         return binding.root
     }
 
+    /**
+     * Called immediately after onCreateView
+     * @param view The View returned by onCreateView(LayoutInflater, ViewGroup, Bundle)
+     * @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?)
     {
         super.onViewCreated(view, savedInstanceState)
+        viewModel.reFetchOrders()
         observeOrders()
         binding.rvFoodItems.layoutManager = LinearLayoutManager(context)
     }
-
+    /**
+     * Observes the orders
+     */
     private fun observeOrders()
     {
         viewModel.allUserOrders.observe(viewLifecycleOwner) { orders ->
             Log.d("FoodOrdersFragment", "Observing ${orders.size} total orders")
-            val currentDayOrders = orders.filter { it.orderDate.isToday() }
+            orders.forEach { order ->
+                if (!order.isDelivered && order.travelTime <= Date()) {
+                    viewModel.updateOrderStatusAsDelivered(order.id)
+                }
+            }
             val sortedOrders = orders.sortedByDescending { it.orderDate }
 
             val adapter = FoodOrderAdapter(
@@ -56,19 +76,19 @@ class FoodOrdersFragment : Fragment() {
         }
     }
 
-    private fun Date.isToday(): Boolean
-    {
-        val cal1 = Calendar.getInstance()
-        val cal2 = Calendar.getInstance()
-        cal2.time = this
-        return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
-                cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
-    }
-
+    /**
+     * Navigates to the checkout fragment
+     */
     private fun navigateToCheckoutFragment() { findNavController().navigate(R.id.checkoutFragment) }
 
+    /**
+     * Navigates to the map fragment
+     */
     private fun navigateToMapFragment() { findNavController().navigate(R.id.mapFragment) }
 
+    /**
+     * Called when the view hierarchy associated with the fragment is being destroyed
+     */
     override fun onDestroyView()
     {
         super.onDestroyView()
